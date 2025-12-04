@@ -1,20 +1,26 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-import os
-from dotenv import load_dotenv
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from .database import Base
 
 
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/expenses.db")
+class Expense(Base):
+__tablename__ = "expenses"
+id = Column(Integer, primary_key=True, index=True)
+amount = Column(Float, nullable=False)
+category = Column(String, nullable=False, index=True)
+note = Column(String, nullable=True)
+created_at = Column(DateTime(timezone=True), server_default=func.now())
+user = Column(String, default="default_user")
+share_id = Column(String, nullable=True, index=True) # grouping id for shared expenses
 
 
-# For SQLite ensure check_same_thread=False
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite:") else {})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-
-
-
-def init_db():
-Base.metadata.create_all(bind=engine)
+class Budget(Base):
+__tablename__ = "budgets"
+id = Column(Integer, primary_key=True, index=True)
+category = Column(String, nullable=False, index=True)
+year = Column(Integer, nullable=False)
+month = Column(Integer, nullable=False)
+amount = Column(Float, nullable=False)
+user = Column(String, default="default_user")
+alert_threshold = Column(Float, nullable=True) # optional override per-budget
